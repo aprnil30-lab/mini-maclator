@@ -46,18 +46,46 @@ A next-generation reverse binary translation & execution framework designed to r
 
 ---
 
-## 🚀 快速上手与验证
+## 💻 快速安装 (Installation)
 
-### 1. 运行 Mach-O 原生二进制测试
+### 方式一：一键自动安装 (推荐)
+打开终端，直接执行项目内置的安装脚本：
 ```bash
-# 生成原生 ARM64 Mach-O 测试样本
-python3 tests/gen_macho.py
+git clone https://github.com/aprnil30-lab/mini-maclator.git
+cd mini-maclator
+bash install.sh
+```
+脚本会自动检查并安装 `unicorn` 与 `capstone` 依赖，并在系统 `/usr/local/bin/maclator` 生成全局可执行命令。
 
-# 使用 MiniMaclator 直接加载并运行 Mach-O 文件
-PYTHONPATH=src python3 -c "from engine import MiniMaclator; m = MiniMaclator(); m.run_macho('tests/sample_arm64.macho')"
+---
+
+### 方式二：手动配置
+1. 安装依赖：
+```bash
+pip3 install unicorn capstone
+```
+2. 运行测试套件：
+```bash
+PYTHONPATH=src python3 tests/test_full.py
 ```
 
-**运行输出示例：**
+---
+
+## 🚀 使用方法 (Usage)
+
+安装后，你可以在任意目录下直接使用 `maclator` 命令运行 ARM64 Mach-O 程序：
+
+```bash
+maclator <你的ARM64_Mach-O文件路径>
+```
+
+**测试体验：**
+运行项目中内置生成的 ARM64 样本：
+```bash
+maclator tests/sample_arm64.macho
+```
+
+**运行输出效果：**
 ```text
 [MachO Loader] 开始加载可执行文件: sample_arm64.macho
   -> 映射段 __TEXT     虚拟地址: 0x100000000 ~ 0x100001000 (大小: 4096 字节)
@@ -66,5 +94,6 @@ PYTHONPATH=src python3 -c "from engine import MiniMaclator; m = MiniMaclator(); 
 [MiniMaclator] 启动执行 Mach-O 入口点: 0x100000200...
 [Mach-O Native Execution] Hello from parsed ARM64 Mach-O Binary!
 [MiniMaclator] 拦截到 Sandbox Check (Syscall 0x200), 伪造放行返回 0
+
 [MiniMaclator] 进程正常退出, ExitCode=0
 ```
