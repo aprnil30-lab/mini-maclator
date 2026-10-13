@@ -12,9 +12,9 @@ A next-generation reverse binary translation & execution framework designed to r
 | :--- | :--- | :--- |
 | **Mach-O 二进制原生装载** | 仅依赖外部 sysroot 提取 | **内置原生 `MachOLoader`**，完整解析 LC_SEGMENT_64 / LC_UNIXTHREAD / LC_MAIN，实现段内存映射与 Entrypoint 解析 |
 | **沙盒应用 (Sandbox)** | ❌ 不支持 (权限不匹配直接 SIGKILL) | **Syscall 拦截伪造层**: 劫持沙盒权限探测（如 `sandbox_check`），强制 Mock 返回 0（放行状态），杜绝闪退 |
-| **音频输出 (Audio/CoreAudio)** | ❌ 不支持 | **Audio Hook 桥接**: 拦截 CoreAudio / HAL 调用分发，捕获 PCM 缓冲区重定向播放 |
+| **音频输出 (Audio/CoreAudio)** | ❌ 不支持 | **AudioBridge 模块 (`audio_bridge.py`)**: 拦截 CoreAudio / AudioQueue 调度，实时捕获 guest 内存中 PCM 音频流并桥接输出为标准 WAV 音频文件 |
 | **IOKit 硬件依赖** | ❌ 大部分硬件不支持 | **虚拟硬件句柄分发**: 提供 Mock Matching Service，避免应用因找不到硬件而 abort |
-| **CAMetalLayer 渲染** | ❌ 不支持 | 规划基于 `IOSurface` 的共享内存纹理交换，打通跨架构画面上屏 |
+| **CAMetalLayer 渲染** | ❌ 不支持 | **IOSurfaceBridge 模块 (`gpu_surface_bridge.py`)**: 实现 CAMetalLayer 上屏提交拦截，跨架构共享 1.9MB+ 显存帧缓冲与纹理数据 |
 
 ---
 

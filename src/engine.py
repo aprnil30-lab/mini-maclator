@@ -7,6 +7,8 @@ from unicorn.arm64_const import (
 )
 import capstone
 from macho_loader import MachOLoader
+from audio_bridge import AudioBridge
+from gpu_surface_bridge import IOSurfaceBridge
 
 STACK_ADDR = 0x700000000000
 STACK_SIZE = 0x200000  # 2MB 栈空间
@@ -15,6 +17,8 @@ class MiniMaclator:
     def __init__(self):
         self.uc = Uc(UC_ARCH_ARM64, UC_MODE_ARM)
         self.cs = capstone.Cs(capstone.CS_ARCH_ARM64, capstone.CS_MODE_ARM)
+        self.audio_bridge = AudioBridge()
+        self.gpu_bridge = IOSurfaceBridge()
         
         # 映射栈空间
         self.uc.mem_map(STACK_ADDR, STACK_SIZE)
@@ -55,8 +59,16 @@ class MiniMaclator:
             uc.reg_write(UC_ARM64_REG_X0, 0x1337)
         # 核心超越特性 3: 音频 AudioQueue/HAL 调度拦截 (捕获 PCM 数据流)
         elif sys_no == 0x202:
-            print(f"[MiniMaclator] 拦截到 CoreAudio 输出请求 (Syscall 0x202), 桥接音频数据包")
-            uc.reg_write(UC_ARM64_REG_X0, 0)
+            buf_addr = a0
+            buf_size = a1
+            res = self.audio_bridge.handle_audio_stream(uc, buf_addr, buf_size)
+            uc.reg_write(UC_ARM64_REG_X0, res)
+        # 核心超越特性 4: CAMetalLayer / IOSurface 纹理呈现拦截
+        elif sys_no == 0x203:
+            surface_id = a0
+            frame_buf_addr = a1
+            res = self.gpu_bridge.present_drawable(uc, surface_id, frame_buf_addr)
+            uc.reg_write(UC_ARM64_REG_X0, res)
         else:
             print(f"[MiniMaclator] 未知 Syscall: {sys_no} at PC=0x{pc:x}")
             uc.reg_write(UC_ARM64_REG_X0, 0)
